@@ -8,17 +8,30 @@ data from our individual stocks and then run queries on that DB.
 import sqlite3
 from sqlite3 import Error
 import pandas as pd
+import os
+import glob
 
-clear_stock_table = '''
-					DROP TABLE IF EXISTS Stocks
+CLEAR_STOCK_TABLE = '''
+					DROP TABLE IF EXISTS Stocks;
 					'''
 
-create_stock_table = '''
+CREATE_STOCK_TABLE = '''
 					 CREATE TABLE IF NOT EXISTS Stocks (
-					 	id INTEGER PRIMARY KEY,
-						StockName
-					 )
-'''
+						id INTEGER PRIMARY KEY,
+						StockName varchar(30),
+						Date DATETIME,
+						Open DOUBLE,
+						High DOUBLE,
+						Low DOUBLE,
+						Close DOUBLE,
+						Volume INTEGER
+					 );
+					 '''
+
+INSERT_STOCK_TABLE = '''
+					 INSERT INTO Stocks(StockName, Date, Open, High, Low, Close, Volume)
+					 VALUES (?,?,?,?,?,?,?);
+					 '''
 
 class StockDB:
 	def __init__(self):
@@ -26,6 +39,7 @@ class StockDB:
 
 		self.db_name = 'stocksDB.db'
 		self.tickers = self._get_company_tickers()
+		self._create_database(self.db_name)
 
 	def _get_company_tickers(self):
 		'''Creates a dictionary that holds company names matching to tickers'''
@@ -41,12 +55,61 @@ class StockDB:
 
 		return company_ticks
 
-	def create_connection(self, db):
+	def _create_database(self, name):
+		'''
+		Creates a DB object that stores all of the stock information from the
+		individual_stocks folder (500 companies).
+
+		Parameters:
+			name (str): Name of DB
+		'''
+
+		path_to_stocks = os.getcwd() + '/individual_stocks/*.csv'
+		stock_file_names = glob.glob(path_to_stocks)
+
+		db_conn = sqlite3.connect(name)
+		c = db_conn.cursor()
+
+		c.execute(CLEAR_STOCK_TABLE)
+		c.execute(CREATE_STOCK_TABLE)
+
+		for file_name in stock_file_names:
+			s_information = self._grab_stock_information(file_name)
+			c.executemany(INSERT_STOCK_TABLE, s_information)
+			db_conn.commit()
+
+		c.close()
+
+	def _grab_stock_information(self, filename):
+		'''
+		Opens up the file and returns a list of tuple of stock information in
+		the following format:
+
+		(StockName, Date, Open, High, Low, Close, Volume)
+
+		Parameters:
+			filename (str): Name of file to grab stock information
+
+		Returns:
+			stock_information (list<list>): A list of list of stock information
+		'''
+
+		stock_information = []
+
+		df = pd.read_csv(filename)
+
+		for index, row in df.iterrows():
+			info_tuple = (row.Name, row.date, row.open, row.high, row.low, row.close, row.volume)
+			stock_information.append(info_tuple)
+
+		return stock_information
+
+	def create_connection(self):
 		'''
 		Creates a connection to the stocks DB
 
 		Parameters:
-			db (string): Name of DB
+			db (str): Name of DB
 
 		Returns:
 			Conn (db object): Connector object to the DB
@@ -54,17 +117,12 @@ class StockDB:
 
 		connector = None
 
-	    try:
-	        conn = sqlite3.connect(db_file)
-	    except Error as e:
-	        print(e)
+		try:
+			connector = sqlite3.connect(self.db_name)
+		except Error as e:
+			print(e)
 
 		return connector
-
-	def close_connection(self, connector):
-		'''Closes a finished session of DB'''
-
-		connector.close()
 
 	def query_stock(self, stock):
 		'''
@@ -78,4 +136,12 @@ class StockDB:
 									  stock ticker
 		'''
 
-		pass
+		QUERY = '''SELECT * FROM Stocks where Stockname = '{0}';'''.format(stock)
+		conn = self.create_connection()
+		c = conn.cursor()
+
+		c.execute(QUERY)
+		rows = c.fetchall()
+		c.close()
+
+		return rows
