@@ -10,41 +10,23 @@ we can check how well the MLR did with predictions.
 import numpy as np
 import pandas as pd
 import os
+import glob
 from data.database import StockDB
-from source.helper import query_data_to_df, split_data, r2_score
+from source.helper import query_data_to_df, split_data, r2_score, df_to_train_dataset
 from source.multiple_linear_regression import MultipleLinearRegression
-
-def get_company_user_input(DB):
-	user_input = input("Name of S&P 500 Company to analyze (Please enter full and correct company name): ")
-
-	while not DB.check_company(user_input):
-		print("Company not found, please enter a valid company")
-		print("-----------------------------------------------")
-		user_input = input("Name of S&P 500 Company to analyze (Please enter full and correct company name): ")
-
-	return user_input
-
-def intro_display():
-	print("Stock Prediction ML")
-	print("-------------------")
-
-def end_display():
-	pass
-
-def analyze_another_company():
-	pass
-
-def plot_data():
-	pass
+from .m_helper import get_company_user_input, analyze_another_company
+from .m_helper import intro_display, end_display, plot_data
 
 def main():
+	intro_display()
+
 	# Initializing DB and MLR model
 	db = StockDB()
-	end = False
+	analyzing = True
 
-	while not end:
+	while analyzing:
 		# Grab stock information from DB
-		user_input = get_company_user_input()
+		user_input = get_company_user_input(db)
 		stock_information = db.query_stock(user_input)
 
 		# Transform data to be used by MLR
@@ -57,10 +39,13 @@ def main():
 		MLR.fit(X_train, y_train)
 
 		y_pred = MLR.predict(X_test)
-		r2 = r2_score(y_test, y_pred)
+		r2 = r2_score(y_test.values.tolist(), y_pred)
 
-		# TO-DO
+		plot_data(X_test, y_test.values.tolist(), y_pred, r2)
 
+		analyzing = analyze_another_company()
+
+	end_display()
 
 if __name__ == '__main__':
 	main()
