@@ -36,13 +36,13 @@ INSERT_STOCK_TABLE = '''
 class StockDB:
 	def __init__(self):
 		'''Initializes Stocks DB'''
-		self.db_name = 'stocksDB.db'
+		self.db_name = os.getcwd() + '/data/stocksDB.db'
 		self.tickers = self._get_company_tickers()
 
 	def _get_company_tickers(self):
 		'''Creates a dictionary that holds company names matching to tickers'''
 
-		path = 'company_names.csv'
+		path = os.getcwd() + '/data/company_names.csv'
 		company_ticks = {}
 
 		df = pd.read_csv(path)
