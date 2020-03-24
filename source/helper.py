@@ -9,6 +9,7 @@ import math
 import pandas as pd
 import numpy as np
 import random
+from datetime import datetime
 
 def query_data_to_df(query_information):
 	'''
@@ -41,11 +42,12 @@ def df_to_train_dataset(df):
 		x_train (matrix): matrix of training data
 		y_train (list): list of corresponding stock closing price
 	'''
+
 	x_cols = ['Date', 'Open', 'High', 'Low', 'Volume']
 	y_cols = ['Close']
 
-	x_train = df[x_cols].tolist()
-	y_train = df[y_cols].tolist()
+	x_train = df[x_cols].values.tolist()
+	y_train = df[y_cols].values.tolist()
 
 	return x_train, y_train
 
@@ -69,7 +71,7 @@ def split_data(x_train, y_train, split_size=0.1):
 	if len(x_train) == len(y_train):
 		random.seed()
 
-		nx_train, ny_train, nx_test, ny_test = [], [], [], []
+		nX_train, ny_train, nX_test, ny_test = [], [], [], []
 
 		test_size = round(len(x_train) * split_size)
 		train_size = len(x_train) - test_size
@@ -79,13 +81,21 @@ def split_data(x_train, y_train, split_size=0.1):
 
 		for i in range(len(x_train)):
 			if i in indexes:
-				nx_test.append(indexes[i])
+				nX_test.append(indexes[i])
 				ny_test.append(y_train[i])
 			else:
-				nx_train.append(x_train[i])
+				nX_train.append(x_train[i])
 				ny_train.append(y_train[i])
 
-		return nx_train, ny_train, nx_test, ny_test
+		x_cols = ['Date', 'Open', 'High', 'Low', 'Volume']
+		y_cols = ['Close']
+
+		nX_train = pd.DataFrame(nX_train, columns = x_cols)
+		ny_train = pd.DataFrame(ny_train, columns = y_cols)
+		nX_test = pd.DataFrame(nX_test, columns = x_cols)
+		ny_test = pd.DataFrame(ny_test, columns = y_cols)
+
+		return nX_train, ny_train, nX_test, ny_test
 	else:
 		return None, None, None, None
 
@@ -110,4 +120,12 @@ def r2_score(y_true, y_pred):
 		numerator += ((y_true[i] - y_pred[i]) ** 2)
 		denominator += ((y_true[i] - y_avg) ** 2)
 
-	return numerator/denominator
+	return 1 - numerator/denominator
+
+def convert_to_epoch(time_str):
+	'''Converts yyyy-mm-dd hh-mm-ss to epoch'''
+	t = time_str.split('-')
+
+	epoch = datetime(int(t[0]), int(t[1]), int(t[2]), 0, 0, 0).timestamp()
+
+	return epoch
