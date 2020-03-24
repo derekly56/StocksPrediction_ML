@@ -37,7 +37,6 @@ class MultipleLinearRegression:
 		nX = self._concat(nX)
 
 		self.coefs = np.linalg.inv(nX.transpose().dot(nX)).dot(nX.transpose()).dot(y)
-		print("coefs: " + str(self.coefs))
 
 	def predict(self, X_test):
 		'''
@@ -62,7 +61,7 @@ class MultipleLinearRegression:
 
 			date, open, high = row['Date'], row['Open'], row['High']
 			low, volume = row['Low'], row['Volume']
-			
+
 			input = [date, open, high, low, volume]
 
 			for i in range(1, len(b_n)):
