@@ -12,6 +12,7 @@ import math
 import random
 import numpy as np
 import pandas as pd
+from .helper import convert_to_epoch
 
 class MultipleLinearRegression:
 	def __init__(self):
@@ -20,19 +21,23 @@ class MultipleLinearRegression:
 
 	def fit(self, X, y):
 		'''
-		Fitting the data by utilizing the MLR equation of finding coefficients
+		Fitting the data by utilizing the MLR equation of finding coefficients.
+		First, we need to convert date-time to epoch format. Then, calculate coefs.
 
 		Parameters:
 			X (matrix): Matrix containing the training data with multiple features
 			y (list): List containing the regression data for the matrix X
 
 		'''
-		
+
 		if len(X.shape) == 1:
 			X = self._reshape_x(X)
 
-		X = self._concat(X)
-		self.coefs = np.linalg.inv(X.transpose().dot(X)).dot(X.transpose()).dot(y)
+		nX = self._convert_to_epoch(X)
+		nX = self._concat(nX)
+
+		self.coefs = np.linalg.inv(nX.transpose().dot(nX)).dot(nX.transpose()).dot(y)
+		print("coefs: " + str(self.coefs))
 
 	def predict(self, X_test):
 		'''
@@ -46,15 +51,22 @@ class MultipleLinearRegression:
 			y_preds (list): A list of predictions for every entry in X
 		'''
 
-		b_0 = self.coefs[0]
+		b_0 = self.coefs[0][0]
 		b_n = self.coefs[1:]
 		y_pred = []
 
-		for row in X_test:
+		nX_test = self._convert_to_epoch(X_test)
+
+		for index, row in nX_test.iterrows():
 			init_pred = b_0
 
-			for x_i, b_i in zip(row, b_n):
-				init_pred += (x_i * b_i)
+			date, open, high = row['Date'], row['Open'], row['High']
+			low, volume = row['Low'], row['Volume']
+			
+			input = [date, open, high, low, volume]
+
+			for i in range(1, len(b_n)):
+				init_pred += (b_n[i] * input[i])
 
 			y_pred.append(init_pred)
 
@@ -68,3 +80,26 @@ class MultipleLinearRegression:
 		'''Adds a vector of 1's to the matrix'''
 		ones = np.ones(shape=X.shape[0]).reshape(-1, 1)
 		return np.concatenate((ones, X), 1)
+
+	def _convert_to_epoch(self, X):
+		'''
+		Converts the time-date to epoch and returns a new matrix
+
+		Parameters:
+			X (matrix): Matrix containing dataset with date-time
+
+		Returns:
+			nX (matrix): Matrix containing dataset with epoch
+		'''
+
+		nDate = []
+
+		for index, row in X.iterrows():
+			epoch = convert_to_epoch(row['Date'])
+			nDate.append(epoch)
+
+		nDate = pd.DataFrame(nDate, columns=['Date'])
+
+		nX = pd.concat([nDate, X.loc[:, X.columns != 'Date']], axis=1)
+
+		return nX
