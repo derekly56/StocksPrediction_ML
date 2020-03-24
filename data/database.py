@@ -36,10 +36,8 @@ INSERT_STOCK_TABLE = '''
 class StockDB:
 	def __init__(self):
 		'''Initializes Stocks DB'''
-
 		self.db_name = 'stocksDB.db'
 		self.tickers = self._get_company_tickers()
-		self._create_database(self.db_name)
 
 	def _get_company_tickers(self):
 		'''Creates a dictionary that holds company names matching to tickers'''
@@ -124,24 +122,31 @@ class StockDB:
 
 		return connector
 
-	def query_stock(self, stock):
+	def query_stock(self, company_name):
 		'''
-		Queries for the stock data given the stock tickers
+		Queries for the stock data given the company name
 
 		Parameters:
-			stock (str): Ticker name of stock
+			company_name (str): Company name
 
 		Returns:
-			information (List<list>): A list of list of data for the  given
-									  stock ticker
+			information (List<list>): A list of list of data for the given
+									  company name
 		'''
-
+		stock = self.tickers[company_name]
 		QUERY = '''SELECT * FROM Stocks where Stockname = '{0}';'''.format(stock)
 		conn = self.create_connection()
 		c = conn.cursor()
 
 		c.execute(QUERY)
-		rows = c.fetchall()
+		query_information = c.fetchall()
 		c.close()
 
-		return rows
+		return query_information
+
+	def check_company(self, company_name):
+		'''Checks if the company is valid for S&P 500'''
+		if company_name not in self.tickers:
+			return False
+
+		return True
