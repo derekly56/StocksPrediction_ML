@@ -36,7 +36,7 @@ INSERT_STOCK_TABLE = '''
 class StockDB:
 	def __init__(self):
 		'''Initializes Stocks DB'''
-		self.db_name = os.getcwd() + '/data/stocksDB.db'
+		self.db_name = os.getcwd() + '/stocksDB.db'
 		self.tickers = self._get_company_tickers()
 
 	def _get_company_tickers(self):
@@ -53,19 +53,16 @@ class StockDB:
 
 		return company_ticks
 
-	def _create_database(self, name):
+	def _create_database(self):
 		'''
 		Creates a DB object that stores all of the stock information from the
 		individual_stocks folder (500 companies).
-
-		Parameters:
-			name (str): Name of DB
 		'''
 
-		path_to_stocks = os.getcwd() + '/individual_stocks/*.csv'
+		path_to_stocks = os.getcwd() + '/data/individual_stocks/*.csv'
 		stock_file_names = glob.glob(path_to_stocks)
 
-		db_conn = sqlite3.connect(name)
+		db_conn = sqlite3.connect(self.db_name)
 		c = db_conn.cursor()
 
 		c.execute(CLEAR_STOCK_TABLE)
@@ -75,6 +72,8 @@ class StockDB:
 			s_information = self._grab_stock_information(file_name)
 			c.executemany(INSERT_STOCK_TABLE, s_information)
 			db_conn.commit()
+			
+			print("Added " + file_name.split('/')[-1])
 
 		c.close()
 
