@@ -11,6 +11,7 @@ data format that we'd like, and then run it through the ML model that I have bui
 
 ### Current Status  
 * March 23rd, 2020 - Began Project - `NOT USABLE`  
+* March 23rd, 2020 - Added DB, MLR - `NOT USABLE`
 
 ### Requirements  
 * Python 3
