@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 from data.database import StockDB
 
 def get_company_user_input(DB):
+	'''Checks the DB for the company name'''
+
 	user_input = input("Name of S&P 500 Company to analyze (Please enter full and correct company name): ")
 
 	while not DB.check_company(user_input):
@@ -18,14 +20,20 @@ def get_company_user_input(DB):
 	return user_input
 
 def intro_display():
+	'''Initializes intro display for user'''
+
 	print("Stock Prediction ML")
 	print("-------------------")
 
 def end_display():
+	'''Initializes ending display for user'''
+
 	print()
 	print("Closing Stock Prediction ML program")
 
 def analyze_another_company():
+	'''Asks the user if they want to continue running the program'''
+
 	cont = input("Would you like to analyze another company? (Y/N)")
 
 	while cont != 'Y' or cont != 'N':
@@ -36,6 +44,16 @@ def analyze_another_company():
 	return False
 
 def plot_data(X_test, y_test, y_pred, r2):
+	'''
+	Given the dataset, plot the data with the r2 score.
+
+	Parameters:
+		X_test (matrix): Testing dataset
+		y_test (list): List of true labels
+		y_pred (list): List of prediction labels
+		r2 (double): R2 score of the prediction model
+	'''
+	
 	dates = X_test['Date'].values.tolist()
 
 	fig = plt.figure()
